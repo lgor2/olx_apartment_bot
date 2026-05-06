@@ -1,0 +1,12 @@
+services:
+  olxradar:
+    build: .
+    container_name: olxradar_bot
+    restart: unless-stopped
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./.env:/app/.env
+      - ./target_urls.txt:/app/target_urls.txt
+      - ./chat_ids.txt:/app/chat_ids.txt
+      - ./database.db:/app/database.db
