@@ -133,6 +133,10 @@ ENV/
 env.bak/
 venv.bak/
 
+# Project configuration
+chat_ids.txt
+target_urls.txt
+
 # Spyder project settings
 .spyderproject
 .spyproject

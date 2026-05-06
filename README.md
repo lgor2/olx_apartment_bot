@@ -1,91 +1,114 @@
-![OLXRadar](https://i.imgur.com/umVlxwV.jpeg)
-# OLXRadar
-Get notified instantly of new listings on OLX with this Python app that sends alerts via Telegram and email.
+# 🛰️ OLXRadar
 
-## Prerequisites
+Миттєві сповіщення про нові оголошення на OLX прямо у ваш Telegram або на Email. Більше не потрібно оновлювати сторінку вручну — бот зробить це за вас!
 
-Before running the app, you must have the following installed:
+![OLXRadar Header](https://i.imgur.com/umVlxwV.jpeg)
 
-* Python 3.x
-* A Gmail account and a Gmail app password (see below how to get one)
-* A Telegram bot (see below how to create one)
+## ✨ Особливості
 
-## Installation
+- 🚀 **Миттєвість**: Перевірка нових оголошень за розкладом.
+- 📱 **Telegram**: Сповіщення в один або декілька чатів одночасно.
+- 📧 **Email**: Підтримка Gmail для отримання звітів на пошту.
+- 🐋 **Docker**: Легкий запуск через Docker Compose.
+- 📄 **Гнучкість**: Налаштування декількох пошукових запитів одночасно.
 
-1. Clone/download this repository to your local machine.
-2. Open a terminal and navigate to the project directory.
-3. Create a new virtual environment by running the following command:
-   ```
-   python3 -m venv venv
-   ```
-4. Activate the virtual environment:
-   ```
-   source venv/bin/activate
-   ```
-5. Install the required packages:
-   ```
-   pip install -r requirements.txt
-   ```
-6. Setup your Telegram bot:
-   1. Create a new bot by talking to the [BotFather](https://t.me/BotFather).
-   2. Copy the bot token.
-   3. Send a message to your bot and get the chat ID.
-   4. Copy the chat ID.
-   5. Create a file named `.env` in the project directory.
-   4. Add the following lines to the `.env` file:
-      ```
-      TELEGRAM_BOT_TOKEN="your_token_here"
-      TELEGRAM_CHAT_ID="your_chat_id_here"
-      ```
-      [👉 detailed instructions on how to get the bot token and chat ID](https://12ft.io/proxy?q=https%3A%2F%2Fmedium.com%2Fcodex%2Fusing-python-to-send-telegram-messages-in-3-simple-steps-419a8b5e5e2)
+---
 
+## 🛠️ Швидкий запуск (Docker) — Рекомендовано
 
-7. Setup your Gmail app password:
-   1. Go to [Google Account Security](https://myaccount.google.com/security).
-   2. Select **Two Step Verification** and click **App Password**.
-   3. Select **Mail** and **Other (custom name)**.
-   4. Enter a name for the app password, such as "OLXRadar".
-   5. Copy the generated password.
-   6. Add the following lines to the `.env` file:
-      ```
-      EMAIL_SENDER="your_sender_email_here@gmail.com"
-      EMAIL_RECEIVER="your_receiver_email_here@domain.com"
-      EMAIL_APP_PASSWORD="your_app_password"
-      ```
-8. Add a product URL to monitor:
-   1. Search for a product on [www.olx.ro](https://www.olx.ro/).
-   2. Copy the URL of the search results page.
-   3. Add the URL to `target_urls.txt`, located in the project directory. Add one URL per line.
+Найпростіший спосіб запустити проект — використовувати Docker.
 
-![How to get a search url](https://i.imgur.com/9tEANnp.png)
+1.  **Клонуйте репозиторій**:
+    ```bash
+    git clone https://github.com/yourusername/OLXRadar.git
+    cd OLXRadar
+    ```
 
-## Usage. How to schedule the app to run at fixed intervals
+2.  **Налаштуйте середовище**:
+    Створіть файл `.env` та заповніть його:
+    ```env
+    TELEGRAM_BOT_TOKEN="ваш_токен"
+    TELEGRAM_CHAT_ID="ваш_chat_id" # Основний ID (необов'язково, якщо є chat_ids.txt)
+    
+    # Для Email (необов'язково)
+    EMAIL_SENDER="your-email@gmail.com"
+    EMAIL_RECEIVER="receiver-email@example.com"
+    EMAIL_APP_PASSWORD="your-app-password"
+    ```
 
-**On Windows**
+3.  **Додайте посилання для відстеження**:
+    Створіть файл `target_urls.txt` (використовуйте `target_urls.txt.example` як шаблон) та додайте посилання на пошук OLX (одне на рядок).
 
-Make sure you logged on as an administrator or you have the same access as an administrator, then go to:
+4.  **Запустіть контейнер**:
+    ```bash
+    docker-compose up -d
+    ```
 
+---
+
+## 🐍 Локальний запуск (Python)
+
+Якщо ви не використовуєте Docker:
+
+1.  **Встановіть залежності**:
+    ```bash
+    python -m venv venv
+    source venv/bin/activate  # На Windows: venv\Scripts\activate
+    pip install -r requirements.txt
+    ```
+
+2.  **Налаштуйте конфігураційні файли**:
+    - Скопіюйте приклади: `cp target_urls.txt.example target_urls.txt` та `cp chat_ids.txt.example chat_ids.txt`.
+    - Заповніть `.env`.
+
+3.  **Запустіть скрипт**:
+    ```bash
+    python main.py
+    ```
+
+---
+
+## ⚙️ Налаштування
+
+### Telegram Бот
+1. Створіть бота через [@BotFather](https://t.me/BotFather) та отримайте **Token**.
+2. Щоб отримати свій **Chat ID**, напишіть боту [@userinfobot](https://t.me/userinfobot).
+3. Якщо потрібно надсилати сповіщення декільком людям, додайте їхні ID у файл `chat_ids.txt`.
+
+### Gmail SMTP (для Email)
+1. Увімкніть **Двофакторну автентифікацію** у вашому Google акаунті.
+2. Створіть **Пароль додатка** (App Password) у розділі [Безпека](https://myaccount.google.com/security).
+3. Використовуйте цей пароль у полі `EMAIL_APP_PASSWORD`.
+
+### Як отримати URL для відстеження
+1. Перейдіть на [olx.ua](https://www.olx.ua/).
+2. Введіть пошуковий запит, виберіть фільтри (ціна, район, стан тощо).
+3. Скопіюйте URL з адресного рядка браузера.
+4. Вставте цей URL у `target_urls.txt`.
+
+---
+
+## 🗓️ Автоматизація (Cron / Task Scheduler)
+
+Якщо ви запускаєте скрипт без Docker, налаштуйте виконання за розкладом:
+
+**Linux (Cron)**:
+```bash
+*/15 * * * * /path/to/OLXRadar/venv/bin/python /path/to/OLXRadar/main.py
 ```
-Start -> Control Panel -> System and Security -> Administrative Tools -> Task Scheduler
-Action -> Create Basic Task -> Type a name and Click Next
-```    
-Follow through the wizard.
 
+**Windows**:
+Використовуйте "Task Scheduler" (Планувальник завдань) для запуску `python main.py` кожні 15-30 хвилин.
 
-**On Linux**
-   
-   1. Open the crontab configuration file by running the following command:
-      ```
-      crontab -e
-      ```
-   2. Add the following line to the end of the file to run the app every 30 minutes:
-      ```
-      */30 * * * * /path/to/OLXRadar/venv/bin/python /path/to/OLXRadar/main.py
-      ```
-      Replace `/path/to/OLXRadar` with the actual path to the project directory.
+---
 
-The app will fetch the list of URLs to monitor from `target_urls.txt`, scrape new ads, and send alerts via email and Telegram.
+## 🔒 Безпека та Приватність
 
-## License
+- Файли `.env`, `chat_ids.txt` та `target_urls.txt` додані до `.gitignore`, щоб ваші персональні дані та токени не потрапили в публічний доступ.
+- **Ніколи** не діліться своїм `TELEGRAM_BOT_TOKEN`.
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+---
+
+## 📄 Ліцензія
+
+Цей проект розповсюджується під ліцензією MIT. Деталі у файлі [LICENSE](LICENSE).
