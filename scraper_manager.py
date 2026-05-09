@@ -88,6 +88,7 @@ class OlxScraper:
             ValueError: If the URL is invalid or does not belong to the specified domain.
         """
         ads_links = set()
+        self.current_page = 1
         self.netloc = urlparse(target_url).netloc
         if "olx" not in self.netloc:
             raise ValueError(

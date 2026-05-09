@@ -1,10 +1,11 @@
 import os
 import ssl
+import html as html_lib
 import smtplib
 import requests
 import logging
 from dotenv import load_dotenv
-from utils import normalize_text, extract_search_term
+from utils import normalize_text
 import logging_config
 
 load_dotenv()
@@ -44,50 +45,47 @@ class Messenger():
         return list(set(chat_ids)) # Unique IDs
 
     @staticmethod
-    def generate_ad_string(index: int, ad: dict) -> str:
+    def generate_ad_string(ad: dict) -> str:
         """
         Generates the text body of an advertisement.
 
         Args:
-            index (int): index of the ad in the list.
             ad (dict): A dictionary containing details about
             the ad - title, description, price and URL.
 
         Returns:
             str: The contents of an ad as a string.
         """
-        title = normalize_text(ad["title"]).strip()
-        description = normalize_text(ad["description"]).strip()[:150]
-        price = normalize_text(ad["price"]).strip()
+        title = html_lib.escape(normalize_text(ad["title"]).strip())
+        description = html_lib.escape(normalize_text(ad["description"]).strip()[:200])
+        price = html_lib.escape(normalize_text(ad["price"]).strip())
         url = ad["url"]
-        return f"{index}. {title} ({price})\n{description}...\n{url}\n\n"
+        return (
+            f"🏷 <b>{title}</b>\n"
+            f"💰 <b>{price}</b>\n"
+            f"📝 {description}...\n"
+            f'🔗 <a href="{url}">Відкрити оголошення →</a>'
+        )
 
     @staticmethod
-    def generate_email_content(target_url: str, new_ads: list) -> tuple[str, str]:
+    def generate_ad_content(new_ads: list) -> tuple[str, str]:
         """
-        Generates the subject and the body of an email containing new ads.
+        Generates the subject and the body of a notification containing new ads.
 
         Params:
-            target_url (str): URL of the page where the ads were found.
             new_ads (List[Dict]): A list of dictionaries containing details about
             the new ads - title, description, price and URL.
 
         Returns:
-            Tuple[str, str]: A tuple containing the subject and the body of the email.
-
+            Tuple[str, str]: A tuple containing the subject and the body.
         """
         email_body_elements = []
-        for index, new_ad_details in enumerate(new_ads, start=1):
-            ad_string = Messenger.generate_ad_string(index, new_ad_details)
+        for new_ad_details in new_ads:
+            ad_string = Messenger.generate_ad_string(new_ad_details)
             email_body_elements.append(ad_string)
 
-        search_term = extract_search_term(target_url)
-        # Set custom notification string below
-        email_subject = f"OLXRadar: {len(new_ads)} нове оголошення"
-        if search_term is not None:
-            # email_subject += f" for the term '{search_term.title()}'"
-            email_subject += f""
-        email_body = "\n".join(email_body_elements)
+        email_subject = "🔔 Нове оголошення на OLX"
+        email_body = "\n\n".join(email_body_elements)
         return email_subject, email_body
 
     @staticmethod
@@ -121,15 +119,19 @@ class Messenger():
         logging.info("Email notification sent successfully")
 
     @staticmethod
-    def send_telegram_message(message_subject: str, message_body: str) -> None:
+    def send_telegram_message(message_subject: str, message_body: str, chat_ids: list = None) -> None:
         """
-        Send a message via Telegram to all configured chat IDs.
+        Send a message via Telegram.
+
+        Args:
+            message_subject: Header line of the message.
+            message_body: Body of the message (HTML allowed).
+            chat_ids: List of chat IDs to send to. Defaults to all configured IDs.
         """
         endpoint = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
         max_length = 4000
         message_batches = []
         current_message = ""
-        # Split messages into sections
         chunks = message_body.split("\n\n")
         for chunk in chunks:
             if len(current_message) + len(chunk) <= max_length:
@@ -139,21 +141,19 @@ class Messenger():
                 current_message = chunk + "\n\n"
         message_batches.append(current_message.strip())
 
-        chat_ids = Messenger.get_chat_ids()
-        if not chat_ids:
+        recipients = chat_ids if chat_ids is not None else Messenger.get_chat_ids()
+        if not recipients:
             logging.error("No Telegram chat IDs found for broadcasting.")
             return
 
-        for chat_id in chat_ids:
-            # Send each batch as a separate notification
+        for chat_id in recipients:
             for i, message_batch in enumerate(message_batches):
-                if i == 0:
-                    message_text = f"{message_subject}\n\n{message_batch}"
-                else:
-                    message_text = message_batch
+                message_text = f"{message_subject}\n\n{message_batch}" if i == 0 else message_batch
                 params = {
                     "chat_id": chat_id,
-                    "text": message_text
+                    "text": message_text,
+                    "parse_mode": "HTML",
+                    "disable_web_page_preview": True,
                 }
                 try:
                     response = requests.get(endpoint, params=params)
@@ -161,12 +161,10 @@ class Messenger():
                     if response.json()["ok"]:
                         logging.info(f"Telegram notification sent to {chat_id}")
                     else:
-                        logging.error(
-                            f"Error sending Telegram notification to {chat_id}")
+                        logging.error(f"Error sending Telegram notification to {chat_id}")
                 except requests.exceptions.RequestException as error:
                     logging.error(f"Telegram connection error for {chat_id}: {error}")
-            
-            # Small delay between different users to avoid rate limiting
+
             time.sleep(0.1)
 
     @staticmethod

@@ -81,15 +81,17 @@ def main() -> None:
     and sends notifications by email and Telegram.
     """
     logging.info("Starting OLXRadar...")
-    Messenger.send_telegram_message("🤖 OLX Бот запущено!", "Я успішно стартував і зараз перевіряю посилання на нові квартири...")
+    admin_chat_id = os.getenv("TELEGRAM_CHAT_ID")
+    Messenger.send_telegram_message(
+        "🤖 <b>OLX Бот запущено!</b>",
+        "Я успішно стартував і зараз перевіряю посилання на нові оголошення...",
+        chat_ids=[admin_chat_id] if admin_chat_id else None,
+    )
     
     while True:
         target_urls = load_target_urls()
         for target_url in target_urls:
-            ads_urls = get_new_ads_urls_for_url(target_url)
-
-            # Filter out the already processed ads
-            new_ads_urls = get_new_ads_urls(ads_urls)
+            new_ads_urls = get_new_ads_urls_for_url(target_url)
             if not new_ads_urls:
                 continue
 
@@ -100,8 +102,7 @@ def main() -> None:
 
             if new_ads:
                 for ad in new_ads:
-                    message_subject, message_body = Messenger.generate_email_content(
-                        target_url, [ad])
+                    message_subject, message_body = Messenger.generate_ad_content([ad])
                     Messenger.send_telegram_message(message_subject, message_body)
                     db.add_url(ad['url'])
         
